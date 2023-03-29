@@ -64,11 +64,9 @@ namespace transport_system {
 		std::unordered_map<std::string, Route> routes_;
 		// HINT : u_map < Stop* , set < Bus* > >
 		std::unordered_map<Stop*, std::unordered_set<Bus*>> buses_on_stop_;
+		
 		Route dummy_;
 		Route empty_;
-
-		const char BusLineDelimeter = '-';
-		const char BusCircleDelimeter = '>';
 
 		// HINT : map < Stop1* , map < Stop2* , distance > >
 		std::map<Stop*, std::map<Stop*, double>> geo_distances_;
@@ -89,25 +87,34 @@ namespace transport_system {
 		void AddStop(const std::string& name, const double lat, const double lon);
 
 		void ClarifyDistance(const std::string_view stop1, const std::string_view stop2, double dist);
+		void SetDummy(Route& dummy);
+		void InsertRoute(const std::string& bus_name);
+		void PutBusesOnStop(const Bus& bus);
 
 		// information out
 		const Route& GetRoute(const std::string& BusName);
+		const std::unordered_set<Bus, StringHasher<Bus>>& GetBuses();
+		const std::unordered_map<std::string, Route>& GetRoutes();
 		const std::set<std::string> GetBusesOfStop(const std::string StopName);
 
 		const Stop& FindStop(const std::string& name) const;
 		const Bus& FindBus(const std::string& name) const;
 
-	private:			// methods
-		void ParseRoutes();
 		Stop* LinkTextToStop(const std::string& in);
-		Route BasicParse(const std::string& raw_desc, const char delim);
-		Route ParseLinearRoute(const std::string& raw_desc);
-		Route ParseCircularRoute(const std::string& raw_desc);
-
 		size_t CalcUniques(const Route& route);
 		void CalcDistances(Route& route);
 		double DistBetween(Stop*& a, Stop*& b);
 
-		void PutBusesOnStop(const Bus& bus);
+	private:			// methods
+		//void ParseRoutes();
+		//Stop* LinkTextToStop(const std::string& in);
+		//Route BasicParse(const std::string& raw_desc, const char delim);
+		//Route ParseLinearRoute(const std::string& raw_desc);
+		//Route ParseCircularRoute(const std::string& raw_desc);
+
+		//size_t CalcUniques(const Route& route);
+		//void CalcDistances(Route& route);
+		//double DistBetween(Stop*& a, Stop*& b);
+				
 	};
 }			// namespace transport_system

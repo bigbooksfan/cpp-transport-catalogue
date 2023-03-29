@@ -11,11 +11,12 @@ transport_system::InputReader::input_reader::input_reader(size_t num, transport_
 		SpecifyDistance(i.first, i.second);
 	}
 	DistSpecifiersBuffer_.clear();
+	ParseRoutes();
 }
 
-void transport_system::InputReader::input_reader::ReadLine() {
+void transport_system::InputReader::input_reader::ReadLine(std::istream& in) {
 	std::string tmp;
-	std::getline(std::cin, tmp);
+	std::getline(in, tmp);
 	//TrimSpaces(tmp);		// do i need it?
 
 	if (tmp.compare(0, StopKeyWord.size(), StopKeyWord) == 0) {
@@ -99,4 +100,93 @@ void transport_system::InputReader::input_reader::TrimSpaces(std::string& s) {
 			}
 		).base(), s.end()
 	);
+}
+
+void transport_system::InputReader::input_reader::ParseRoutes() {
+
+	const std::unordered_map<std::string, transport_system::transport_catalogue::Route>& 
+		routes = tr_cat_->transport_system::transport_catalogue::GetRoutes();
+
+	for (const transport_system::transport_catalogue::Bus& bus : tr_cat_->GetBuses()) {
+		if (routes.count(bus.name_) != 0)
+			throw std::logic_error("Bus name is not unique");
+
+		bool circular = bus.raw_route_.find(BusCircleDelimeter) != std::string::npos;
+		bool linear = bus.raw_route_.find(BusLineDelimeter) != std::string::npos;
+
+		if (circular && linear) {
+			throw std::logic_error("Raw route is both linear and circular");
+		}
+		if (!circular && !linear) {
+			throw std::logic_error("Raw route is not linear or circular");
+		}
+
+		transport_system::transport_catalogue::Route tmp;
+		if (circular) {
+			tmp = ParseCircularRoute(bus.raw_route_);
+			tr_cat_->SetDummy(tmp);
+			tr_cat_->InsertRoute(bus.name_);
+		}
+		else {		// linear route
+			tmp = ParseLinearRoute(bus.raw_route_);
+			tr_cat_->SetDummy(tmp);
+			tr_cat_->InsertRoute(bus.name_);
+		}
+
+		tr_cat_->PutBusesOnStop(bus);
+	}
+}
+
+transport_system::transport_catalogue::Route
+transport_system::InputReader::input_reader::BasicParse(
+	const std::string& raw_desc, const char delim) {
+
+	size_t j = raw_desc.size();
+	transport_system::transport_catalogue::Route ret;
+	ret.way_.reserve(j / 5);
+	size_t bgn = 0, end = 0, sz = 0;
+
+	for (size_t i = 0; i < j; ++i) {
+		if (raw_desc[i] == delim || i == j - 1) {
+			end = (i < j - 1) ? i : j + 1;
+			sz = end - bgn - 1;
+			ret.way_.push_back(
+				tr_cat_->transport_system::transport_catalogue::LinkTextToStop(
+					raw_desc.substr(bgn, sz)));
+			bgn = end + 2;
+		}
+	}
+	return ret;
+}
+
+transport_system::transport_catalogue::Route
+transport_system::InputReader::input_reader::ParseLinearRoute(
+	const std::string& raw_desc) {
+
+	transport_system::transport_catalogue::Route ret 
+		= BasicParse(raw_desc, BusLineDelimeter);
+
+	// adding tail
+	ret.way_.reserve(ret.way_.size() * 2);
+	ret.way_.insert(ret.way_.end(), ret.way_.rbegin() + 1, ret.way_.rend());
+	ret.way_.shrink_to_fit();
+
+	ret.unique_stops_ = tr_cat_->transport_system::transport_catalogue::CalcUniques(ret);
+	tr_cat_->transport_system::transport_catalogue::CalcDistances(ret);
+	ret.curvature_ = ret.exact_length_ / ret.geo_length_;
+	return ret;
+}
+
+transport_system::transport_catalogue::Route
+transport_system::InputReader::input_reader::ParseCircularRoute(
+	const std::string& raw_desc) {
+
+	transport_system::transport_catalogue::Route ret 
+		= BasicParse(raw_desc, BusCircleDelimeter);
+
+	ret.way_.shrink_to_fit();
+	ret.unique_stops_ = tr_cat_->transport_system::transport_catalogue::CalcUniques(ret);
+	tr_cat_->transport_system::transport_catalogue::CalcDistances(ret);
+	ret.curvature_ = ret.exact_length_ / ret.geo_length_;
+	return ret;
 }

@@ -24,6 +24,10 @@ namespace transport_system {
 			const std::string StopCoordDelimeter = ",";
 			const std::string ExactDistanceDelimeter = ",";
 			const std::string ExactDistanceStopsDelimeter = "m to ";
+			const char BusLineDelimeter = '-';
+			const char BusCircleDelimeter = '>';
+
+			
 
 		public:					// constructors
 			input_reader() = delete;
@@ -32,11 +36,21 @@ namespace transport_system {
 		public:					// methods
 
 		private:				// methods
-			void ReadLine();
+			void ParseRoutes();
+			transport_system::transport_catalogue::Route 
+				BasicParse(const std::string& raw_desc, const char delim);
+			transport_system::transport_catalogue::Route
+				ParseLinearRoute(const std::string& raw_desc);
+			transport_system::transport_catalogue::Route
+				ParseCircularRoute(const std::string& raw_desc);
+			
+			void ReadLine(std::istream& in = std::cin);
 			void ReadStop(std::string& str);
 			void ReadBus(std::string& str);
 			static inline void TrimSpaces(std::string& s);
 			void SpecifyDistance(std::string_view curr_stop, std::string_view str);
+
+
 		};
 
 	}			// namespace InputReader
