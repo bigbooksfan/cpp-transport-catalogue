@@ -10,43 +10,38 @@
 
 namespace tests {
 
-    using std::string;
-    using std::cerr;
-
-    using namespace std;            // need it here to avoid massive amount of ""s errors
-
     template <typename T, typename U>
-    void AssertEqualImpl(const T& t, const U& u, const string& t_str, const string& u_str, const string& file, const string& func, unsigned line, const string& hint) {
+    void AssertEqualImpl(const T& t, const U& u, const std::string& t_str, const std::string& u_str, const std::string& file, const std::string& func, unsigned line, const std::string& hint) {
         if (t != u) {
-            cerr << boolalpha;
-            cerr << file << "(" << line << "): " << func << ": ";
-            cerr << "ASSERT_EQUAL(" << t_str << ", " << u_str << ") failed: ";
-            cerr << *t << " != " << *u << ".";
+            std::cerr << std::boolalpha;
+            std::cerr << file << "(" << line << "): " << func << ": ";
+            std::cerr << "ASSERT_EQUAL(" << t_str << ", " << u_str << ") failed: ";
+            std::cerr << *t << " != " << *u << ".";
             if (!hint.empty()) {
-                cerr << " Hint: " << hint;
+                std::cerr << " Hint: " << hint;
             }
-            cerr << std::endl;
+            std::cerr << std::endl;
             abort();
         }
     }
 
-    void AssertImpl(bool value, const string& expr_str, const string& file, const string& func, unsigned line,
-        const string& hint) {
+    void AssertImpl(bool value, const std::string& expr_str, const std::string& file, const std::string& func, unsigned line,
+        const std::string& hint) {
         if (!value) {
-            cerr << file << "(" << line << "): " << func << ":\n";
-            cerr << "ASSERT(" << expr_str << ") failed.\n";
+            std::cerr << file << "(" << line << "): " << func << ":\n";
+            std::cerr << "ASSERT(" << expr_str << ") failed.\n";
             if (!hint.empty()) {
-                cerr << "Hint: " << hint;
+                std::cerr << "Hint: " << hint;
             }
-            cerr << std::endl;
+            std::cerr << std::endl;
             abort();
         }
     }
 
     template <typename T>
-    void RunTestImpl(const T& func, const string& func_name) {
+    void RunTestImpl(const T& func, const std::string& func_name) {
         func();
-        cerr << func_name << " OK\n";
+        std::cerr << func_name << " OK\n";
     }
 
 #define ASSERT(expr) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, "")
