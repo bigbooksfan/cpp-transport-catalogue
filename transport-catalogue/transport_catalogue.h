@@ -79,8 +79,7 @@ namespace transport_system {
 		std::vector<std::string> outrows_;
 
 	public:				// constructors
-		transport_catalogue(std::string& number);
-		transport_catalogue(size_t number);
+		transport_catalogue() = default;
 
 	public:				// methods
 		void AddBus(const std::string& name, const std::string& raw_desc);
@@ -103,18 +102,6 @@ namespace transport_system {
 		Stop* LinkTextToStop(const std::string& in);
 		size_t CalcUniques(const Route& route);
 		void CalcDistances(Route& route);
-		double DistBetween(Stop*& a, Stop*& b);
-
-	private:			// methods
-		//void ParseRoutes();
-		//Stop* LinkTextToStop(const std::string& in);
-		//Route BasicParse(const std::string& raw_desc, const char delim);
-		//Route ParseLinearRoute(const std::string& raw_desc);
-		//Route ParseCircularRoute(const std::string& raw_desc);
-
-		//size_t CalcUniques(const Route& route);
-		//void CalcDistances(Route& route);
-		//double DistBetween(Stop*& a, Stop*& b);
-				
+		double DistBetween(Stop*& a, Stop*& b);				
 	};
 }			// namespace transport_system

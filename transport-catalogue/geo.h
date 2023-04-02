@@ -5,7 +5,7 @@
 namespace transport_system {
     namespace geo {
 
-        const double EARTH_RADII = 6371000;
+        const double EARTH_RADIUS = 6371000;
 
         struct Coordinates {
             double lat;
@@ -26,7 +26,7 @@ namespace transport_system {
             static const double dr = 3.1415926535 / 180.;
             return acos(sin(from.lat * dr) * sin(to.lat * dr)
                 + cos(from.lat * dr) * cos(to.lat * dr) * cos(abs(from.lng - to.lng) * dr))
-                * EARTH_RADII;
+                * EARTH_RADIUS;
         }
     }   // namespace geo
 }       // namespace transport_system

@@ -78,7 +78,9 @@ namespace tests {
             std::string placeholder;
             std::getline(std::cin, placeholder);
 
-            transport_system::transport_catalogue a(placeholder);
+            transport_system::transport_catalogue a;
+            transport_system::InputReader::input_reader 
+                input_reader(std::stoi(placeholder), &a);
 
             transport_system::geo::Coordinates getted = a.FindStop("Biryulyovo Passazhirskaya").coords_;
             transport_system::geo::Coordinates correct{ 55.580999 , 37.659164 };
@@ -112,7 +114,9 @@ namespace tests {
             std::string placeholder;
             std::getline(std::cin, placeholder);
 
-            transport_system::transport_catalogue a(placeholder);
+            transport_system::transport_catalogue a;
+            transport_system::InputReader::input_reader
+                input_reader(std::stoi(placeholder), &a);
 
             std::string getted = a.FindBus("256").raw_route_;
             std::string correct = "Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye";
@@ -139,7 +143,9 @@ namespace tests {
             std::string placeholder;
             std::getline(std::cin, placeholder);
 
-            transport_system::transport_catalogue a(placeholder);
+            transport_system::transport_catalogue a;
+            transport_system::InputReader::input_reader
+                input_reader(std::stoi(placeholder), &a);
 
             transport_system::transport_catalogue::Route getted = a.GetRoute("750");
             transport_system::transport_catalogue::Route correct;
@@ -186,7 +192,9 @@ namespace tests {
             std::string placeholder;
             std::getline(std::cin, placeholder);
 
-            transport_system::transport_catalogue a(placeholder);
+            transport_system::transport_catalogue a;
+            transport_system::InputReader::input_reader
+                input_reader(std::stoi(placeholder), &a);
 
             transport_system::transport_catalogue::Route getted = a.GetRoute("256");
             transport_system::transport_catalogue::Route correct;
@@ -244,7 +252,9 @@ namespace tests {
         std::string placeholder;
         std::getline(std::cin, placeholder);
 
-        transport_system::transport_catalogue a(placeholder);
+        transport_system::transport_catalogue a;
+        transport_system::InputReader::input_reader
+            input_reader(std::stoi(placeholder), &a);
 
         rows.clear();
         rows.resize(7);
@@ -304,7 +314,9 @@ namespace tests {
         std::string placeholder;
         std::getline(std::cin, placeholder);
 
-        transport_system::transport_catalogue a(placeholder);
+        transport_system::transport_catalogue a;
+        transport_system::InputReader::input_reader
+            input_reader(std::stoi(placeholder), &a);
 
         // querries from file
         std::getline(input, str);
@@ -370,7 +382,9 @@ namespace tests {
         std::string placeholder;
         std::getline(std::cin, placeholder);
 
-        transport_system::transport_catalogue a(placeholder);
+        transport_system::transport_catalogue a;
+        transport_system::InputReader::input_reader
+            input_reader(std::stoi(placeholder), &a);
 
         // querries from file
         std::getline(input, str);
