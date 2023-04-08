@@ -1,107 +1,61 @@
 #pragma once
 
-#include <unordered_map>
-#include <unordered_set>
-#include <map>
-#include <set>
-#include <vector>
 #include <string>
-#include <sstream>
-#include <functional>
+#include <vector>
+#include <deque>
+#include <unordered_map>
+#include <optional>
 
 #include "geo.h"
+#include "domain.h"
 
-namespace transport_system {
-	class transport_catalogue {
-	public:			// structs
-		struct Stop {
-			std::string name_;
-			geo::Coordinates coords_;
+namespace tr_cat {
+    namespace aggregations {
+        using namespace std::string_literals;
 
-			// constructor for searching by the name with calling stops_.count(name)
-			Stop(const std::string& name = "", const geo::Coordinates& coords = geo::Coordinates{})
-				: name_(name), coords_(coords) { };
+        class TransportCatalogue {
+        private:            // nested classes
+            class DistanceHasher {
+            public:
+                size_t operator() (const std::pair<const Stop*, const Stop*> element) const {
+                    const size_t shift = (size_t)log2(1 + sizeof(Stop));
+                    const size_t result = (size_t)(element.first) >> shift;
+                    return result + ((size_t)(element.second) >> shift) * 37;
+                }
+            };
 
-			bool operator<(const Stop& other) const;
-			bool operator==(const Stop& other) const;
-		};
+            class DistanceCompare {
+            public:
+                bool operator() (const std::pair<const Stop*, const Stop*> lhs, const std::pair<const Stop*, const Stop*> rhs) const {
+                    return lhs.first == rhs.first && rhs.second == lhs.second;
+                }
+            };
 
-		struct Bus {
-			std::string name_;
-			std::string raw_route_;
+        public:             // fields
+            std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceHasher, DistanceCompare> distances_;
+            std::deque<Stop> stops_data_;
+            std::deque<Bus> buses_data_;
+            std::unordered_map<std::string_view, Stop*> stops_container_;
+            std::unordered_map<std::string_view, Bus*> buses_container_;
+            std::vector<std::string_view> buses_;
 
-			Bus(const std::string& name = "", const std::string& raw_route = "")
-				: name_(name), raw_route_(raw_route) { }
+        public:             // methods
+            void AddStop (std::string_view name, geo::Coordinates coords);
+            void AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring);
+            void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
+            std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
+            std::optional<const Stop*> GetStopInfo (std::string_view name) const;
+            auto begin() const { return buses_.begin(); }
+            auto end() const { return buses_.end(); }
+            size_t size() const { return buses_.size(); }
+            size_t empty() const { return buses_.empty(); }
 
-			bool operator<(const Bus& other) const;
-			bool operator==(const Bus& other) const;
-		};
-
-		// HINT : struct { vector<sv> stops , unique_stops, length }
-		struct Route {
-			std::vector<Stop*> way_;
-			size_t unique_stops_ = 0;
-			double geo_length_ = 0.0;
-			double length_ = 0.0;
-			double exact_length_ = 0.0;
-			double curvature_ = 1.0;
-		};
-
-		// T = struct Bus or struct Stop
-		template <typename T>
-		struct StringHasher {
-			size_t operator()(const T& stop) const {
-				return std::hash<std::string>{}(stop.name_);
-			}
-		};
-
-	private:			// fields
-		// HINT : u_set < struct Stop { string name , Coords } >
-		std::unordered_set<Stop, StringHasher<Stop>> stops_;
-		// HINT : u_set < struct Bus { name , raw route } >
-		std::unordered_set<Bus, StringHasher<Bus>> buses_;
-		// HINT : u_map < bus name , vector < string_view Stops> >
-		std::unordered_map<std::string, Route> routes_;
-		// HINT : u_map < Stop* , set < Bus* > >
-		std::unordered_map<Stop*, std::unordered_set<Bus*>> buses_on_stop_;
-		
-		Route dummy_;
-		Route empty_;
-
-		// HINT : map < Stop1* , map < Stop2* , distance > >
-		std::map<Stop*, std::map<Stop*, double>> geo_distances_;
-		// HINT : map < Stop1* , map < Stop2* , distance > >
-		std::map<Stop*, std::map<Stop*, double>> distances_;
-		// HINT : map < Stop1* , map < Stop2* , distance > >
-		std::map<Stop*, std::map<Stop*, double>> exact_distances_;
-
-	public:				// field for TESTS
-		std::vector<std::string> outrows_;
-
-	public:				// constructors
-		transport_catalogue() = default;
-
-	public:				// methods
-		void AddBus(const std::string& name, const std::string& raw_desc);
-		void AddStop(const std::string& name, const double lat, const double lon);
-
-		void ClarifyDistance(const std::string_view stop1, const std::string_view stop2, double dist);
-		void SetDummy(Route& dummy);
-		void InsertRoute(const std::string& bus_name);
-		void PutBusesOnStop(const Bus& bus);
-
-		// information out
-		const Route& GetRoute(const std::string& BusName);
-		const std::unordered_set<Bus, StringHasher<Bus>>& GetBuses();
-		const std::unordered_map<std::string, Route>& GetRoutes();
-		const std::set<std::string> GetBusesOfStop(const std::string StopName);
-
-		const Stop& FindStop(const std::string& name) const;
-		const Bus& FindBus(const std::string& name) const;
-
-		Stop* LinkTextToStop(const std::string& in);
-		size_t CalcUniques(const Route& route);
-		void CalcDistances(Route& route);
-		double DistBetween(Stop*& a, Stop*& b);				
-	};
-}			// namespace transport_system
+        private:            // methods
+            int ComputeRouteDistance (std::string_view name) const;
+            double ComputeGeoRouteDistance (std::string_view name) const;
+            int GetDistance(const Stop* lhs, const Stop* rhs) const;
+            Stop* FindStop (std::string_view name) const;
+            Bus* FindBus (std:: string_view name)const;
+        };
+    }       // namespace aggregations
+}           // namespace tr_cat

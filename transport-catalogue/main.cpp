@@ -1,25 +1,17 @@
+#include "transport_catalogue.h"
+#include "request_handler.h"
+#include "json_reader.h"
+//#include "tests.h"
+
+#include <cassert>
+#include <fstream>
 #include <iostream>
-#include <string>
-
-#include "input_reader.h"
-#include "stat_reader.h"
-#include "tests.h"
-
-#define TESTMODE
 
 int main() {
-
-#ifdef TESTMODE
-	tests::AllTests();
-#else
-	std::string n;
-	std::getline(std::cin, n);
-	
-	transport_system::transport_catalogue Catalogue(n);
-
-	std::getline(std::cin, n);
-	transport_system::output::stat_reader reader(n, &Catalogue);
-#endif
-
-	return 0;
+    //tests::Test();    
+    tr_cat::aggregations::TransportCatalogue catalog;
+    tr_cat::interface::JsonReader reader(catalog);
+    tr_cat::interface::Process(reader);
+    //tr_cat::render::MapRenderer renderer (catalog, reader.GetRenderSettings(), std::cout);
+    //renderer.Render();
 }
