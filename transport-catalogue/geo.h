@@ -22,9 +22,9 @@ namespace tr_cat {
             }
             static const double dr = 3.1415926535 / 180.;
             static const double earth_rad = 6371000.0;
-            
+
             return std::acos(std::sin(from.lat * dr) * std::sin(to.lat * dr)
-                        + std::cos(from.lat * dr) * std::cos(to.lat * dr) * std::cos(std::abs(from.lng - to.lng) * dr)) * earth_rad;
+                + std::cos(from.lat * dr) * std::cos(to.lat * dr) * std::cos(std::abs(from.lng - to.lng) * dr)) * earth_rad;
         }
     }       // namespace geo
 }           // namespace tr_cat

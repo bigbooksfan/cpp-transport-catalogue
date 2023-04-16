@@ -1,10 +1,10 @@
 #pragma once
 
-#include "transport_catalogue.h"
-
 #include <iostream>
 #include <optional>
 #include <variant>
+
+#include "transport_catalogue.h"
 
 namespace tr_cat {
     namespace interface {
@@ -14,25 +14,25 @@ namespace tr_cat {
             aggregations::TransportCatalogue& tr_cat_;
 
         public:                 // constructors
-            explicit RequestInterface(aggregations::TransportCatalogue& catalog) 
-             : tr_cat_(catalog) { }
-            RequestInterface(aggregations::TransportCatalogue& catalog, std::istream& input) 
-             : tr_cat_(catalog), input_(input) { }
-            RequestInterface(aggregations::TransportCatalogue& catalog, std::ostream& output) 
-             : tr_cat_(catalog), output_(output) { }
-            RequestInterface(aggregations::TransportCatalogue& catalog, std::istream& input, std::ostream& output) 
-             : tr_cat_(catalog), input_(input), output_(output) { }
+            explicit RequestInterface(aggregations::TransportCatalogue& catalog)
+                : tr_cat_(catalog) { }
+            RequestInterface(aggregations::TransportCatalogue& catalog, std::istream& input)
+                : tr_cat_(catalog), input_(input) { }
+            RequestInterface(aggregations::TransportCatalogue& catalog, std::ostream& output)
+                : tr_cat_(catalog), output_(output) { }
+            RequestInterface(aggregations::TransportCatalogue& catalog, std::istream& input, std::ostream& output)
+                : tr_cat_(catalog), input_(input), output_(output) { }
 
             virtual ~RequestInterface() = default;
 
         public:             // methods
-            void AddStops ();
-            void AddDistances ();
-            void AddBuses ();
-            void GetAnswers ();                                            
+            void AddStops();
+            void AddDistances();
+            void AddBuses();
+            void GetAnswers();
             virtual void ReadDocument() = 0;
             virtual void ParseDocument() = 0;
-            virtual void PrintAnswers () = 0;
+            virtual void PrintAnswers() = 0;
 
             virtual bool TestingFilesOutput(std::string filename_lhs, std::string filename_rhs) = 0;
 
@@ -64,7 +64,7 @@ namespace tr_cat {
             };
             struct MapOutput {
                 explicit MapOutput(int i, aggregations::TransportCatalogue& cat)
-                :id(i), catalog(&cat){}
+                    :id(i), catalog(&cat) {}
                 int id;
                 aggregations::TransportCatalogue* catalog;
             };
@@ -78,7 +78,7 @@ namespace tr_cat {
             std::istream& input_ = std::cin;
             std::ostream& output_ = std::cout;
         };
-    
+
         void Process(interface::RequestInterface& reader);
     }           // namespace interface
 }               // namespace tr_cat

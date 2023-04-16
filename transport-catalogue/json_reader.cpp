@@ -24,7 +24,7 @@ namespace tr_cat {
 
         void JsonReader::ParseBase(json::Node& base_node) {
             auto& base = base_node.AsArray();
-            for (auto& element_node: base) {
+            for (auto& element_node : base) {
                 auto& element = element_node.AsMap();
                 if (element.at("type"s).AsString() == "Stop"s) {
 
@@ -37,13 +37,13 @@ namespace tr_cat {
                     if (element.count("road_distances"s)) {
                         auto& map_distances = element.at("road_distances"s).AsMap();
                         for (auto& [name, value] : map_distances) {
-                            distances_[stops_.back().name].push_back({name, value.AsInt()});
+                            distances_[stops_.back().name].push_back({ name, value.AsInt() });
                         }
                     }
 
-                } 
+                }
                 else if (element.at("type"s).AsString() == "Bus"s) {
-                    
+
                     buses_.push_back({});
 
                     buses_.back().name = element.at("name"s).AsString();
@@ -55,9 +55,9 @@ namespace tr_cat {
                         buses_.back().stops.push_back(elem.AsString());
                     }
 
-                } 
+                }
                 else {
-                    throw invalid_argument ("Unknown type"s);
+                    throw invalid_argument("Unknown type"s);
                 }
             }
         }
@@ -69,9 +69,10 @@ namespace tr_cat {
             for (auto& element_node : stats) {
                 auto& element = element_node.AsMap();
                 if (element.count("name"s)) {
-                    stats_.push_back({element.at("id"s).AsInt(), element.at("type"s).AsString(), element.at("name"s).AsString()});
-                } else {
-                    stats_.push_back({element.at("id"s).AsInt(), element.at("type").AsString(), {}});
+                    stats_.push_back({ element.at("id"s).AsInt(), element.at("type"s).AsString(), element.at("name"s).AsString() });
+                }
+                else {
+                    stats_.push_back({ element.at("id"s).AsInt(), element.at("type").AsString(), {} });
                 }
             }
         }
@@ -100,27 +101,29 @@ namespace tr_cat {
             }
             if (settings.count("bus_label_offset"s)) {
                 auto it = settings.at("bus_label_offset"s).AsArray();
-                render_settings_.bus_label_offset = {it[0].AsDouble(), it[1].AsDouble()};
+                render_settings_.bus_label_offset = { it[0].AsDouble(), it[1].AsDouble() };
             }
             if (settings.count("stop_label_font_size"s)) {
                 render_settings_.stop_label_font_size = settings.at("stop_label_font_size"s).AsDouble();
             }
             if (settings.count("stop_label_offset"s)) {
                 auto it = settings.at("stop_label_offset"s).AsArray();
-                render_settings_.stop_label_offset = {it[0].AsDouble(), it[1].AsDouble()};
+                render_settings_.stop_label_offset = { it[0].AsDouble(), it[1].AsDouble() };
             }
 
-            auto get_color = [&] (json::Node& key, svg::Color* field) {
+            auto get_color = [&](json::Node& key, svg::Color* field) {
                 if (key.IsString()) {
                     *field = key.AsString();
-                } else if (key.AsArray().size() == 3) {
-                    *field = svg::Rgb({key.AsArray()[0].AsInt(), key.AsArray()[1].AsInt(), key.AsArray()[2].AsInt()});
-                } else if (key.AsArray().size() == 4) {
-                    *field = svg::Rgba({key.AsArray()[0].AsInt(), key.AsArray()[1].AsInt(), key.AsArray()[2].AsInt(), 
-                                                                                            key.AsArray()[3].AsDouble()});
+                }
+                else if (key.AsArray().size() == 3) {
+                    *field = svg::Rgb({ key.AsArray()[0].AsInt(), key.AsArray()[1].AsInt(), key.AsArray()[2].AsInt() });
+                }
+                else if (key.AsArray().size() == 4) {
+                    *field = svg::Rgba({ key.AsArray()[0].AsInt(), key.AsArray()[1].AsInt(), key.AsArray()[2].AsInt(),
+                                                                                            key.AsArray()[3].AsDouble() });
                 }
             };
-            
+
             if (settings.count("underlayer_color"s)) {
                 get_color(settings.at("underlayer_color"s), &render_settings_.underlayer_color);
             }
@@ -139,13 +142,13 @@ namespace tr_cat {
         }
 
         void JsonReader::PrepareToPrint() {
-            json::Array to_document; 
+            json::Array to_document;
             to_document.reserve(answers_.size());
             for (auto& answer : answers_) {
-                to_document.push_back(move(visit(CreateNode{render_settings_}, answer)));
+                to_document.push_back(move(visit(CreateNode{ render_settings_ }, answer)));
             }
             document_answers_ = move(to_document);
-        }  
+        }
 
         void JsonReader::PrintAnswers() {
             PrepareToPrint();
@@ -153,8 +156,8 @@ namespace tr_cat {
         }
 
         json::Node JsonReader::CreateNode::operator() (int value) {
-            map <string, json::Node> answer = {{"request_id"s, value}, 
-                                                {"error_message"s, "not found"s}};
+            map <string, json::Node> answer = { {"request_id"s, value},
+                                                {"error_message"s, "not found"s} };
             return answer;
         }
 
@@ -164,17 +167,17 @@ namespace tr_cat {
                 buses.push_back(move(static_cast<string>(bus)));
             }
 
-            map <string, json::Node> answer = {{"buses"s, buses},
-                                               {"request_id"s, value.id}};
+            map <string, json::Node> answer = { {"buses"s, buses},
+                                               {"request_id"s, value.id} };
             return answer;
         }
 
         json::Node JsonReader::CreateNode::operator() (BusOutput& value) {
-            map <string, json::Node> answer = {{"request_id"s, value.id},
+            map <string, json::Node> answer = { {"request_id"s, value.id},
                                                {"curvature"s, value.bus->curvature},
                                                {"route_length"s, static_cast<double>(value.bus->distance)},
                                                {"stop_count"s, static_cast<int>(value.bus->stops.size())},
-                                               {"unique_stop_count"s, value.bus->unique_stops}};
+                                               {"unique_stop_count"s, value.bus->unique_stops} };
             return answer;
         }
 
@@ -183,8 +186,8 @@ namespace tr_cat {
             render::MapRenderer renderer(*value.catalog, settings_, output);
             renderer.Render();
 
-            map<string, json::Node> answer = {{"request_id"s, value.id},
-                                              {"map"s, output.str()}};
+            map<string, json::Node> answer = { {"request_id"s, value.id},
+                                              {"map"s, output.str()} };
             return answer;
         }
 
@@ -239,14 +242,14 @@ namespace tr_cat {
         }
 
 
-        bool JsonReader::TestingFilesOutput(std::string filename_lhs, std::string filename_rhs) {            
+        bool JsonReader::TestingFilesOutput(std::string filename_lhs, std::string filename_rhs) {
             json::Document lhs, rhs;
             {
-                std::ifstream inf {filename_lhs};
+                std::ifstream inf{ filename_lhs };
                 lhs = json::Load(inf);
             }
             {
-                std::ifstream inf {filename_rhs};
+                std::ifstream inf{ filename_rhs };
                 rhs = json::Load(inf);
             }
             return NodeCompare(lhs.GetRoot(), rhs.GetRoot());
