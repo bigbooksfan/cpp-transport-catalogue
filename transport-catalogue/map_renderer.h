@@ -1,10 +1,10 @@
-#include "svg.h"
-#include "transport_catalogue.h"
-#include "geo.h"
-
 #include <ostream>
 #include <algorithm>
 #include <unordered_set>
+
+#include "svg.h"
+#include "transport_catalogue.h"
+#include "geo.h"
 
 namespace tr_cat {
     namespace render {
@@ -24,7 +24,7 @@ namespace tr_cat {
             // points_begin and points_end define the beginning and end of a range of geo::Coordinates elements
             template <typename PointInputIt>
             SphereProjector(PointInputIt points_begin, PointInputIt points_end,
-                            double max_width, double max_height, double padding)
+                double max_width, double max_height, double padding)
                 : padding_(padding)
             {
                 // if the surface points of the sphere are not given, there is nothing to calculate
@@ -62,11 +62,11 @@ namespace tr_cat {
                     // The scaling coefficients for width and height are non-zero, 
                     // we take the minimum of them
                     zoom_coeff_ = std::min(*width_zoom, *height_zoom);
-                } 
+                }
                 else if (width_zoom) {
                     // width scaling factor is non-zero, use it
                     zoom_coeff_ = *width_zoom;
-                } 
+                }
                 else if (height_zoom) {
                     // height scaling factor is non-zero, use it
                     zoom_coeff_ = *height_zoom;
@@ -92,10 +92,10 @@ namespace tr_cat {
             double stop_radius = 0;
 
             double bus_label_font_size = 0;
-            svg::Point bus_label_offset {0, 0};
+            svg::Point bus_label_offset{ 0, 0 };
 
             double stop_label_font_size = 0;
-            svg::Point stop_label_offset {0, 0};
+            svg::Point stop_label_offset{ 0, 0 };
 
             svg::Color underlayer_color;
             double underlayer_width = 0;
@@ -117,15 +117,15 @@ namespace tr_cat {
         public:             // constructors
             MapRenderer() = delete;
             MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings)
-            :tr_cat_(catalog), settings_(settings) {}
+                :tr_cat_(catalog), settings_(settings) {}
             MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings, std::ostream& output)
-            :tr_cat_(catalog), settings_(settings), output_(output) {}
+                :tr_cat_(catalog), settings_(settings), output_(output) {}
 
             void Render();
 
         private:            // methods
-            std::unordered_set<geo::Coordinates, CoordinatesHasher> CollectCoordinates () const;
-            std::pair<std::unique_ptr<svg::Text>, std::unique_ptr<svg::Text>> 
+            std::unordered_set<geo::Coordinates, CoordinatesHasher> CollectCoordinates() const;
+            std::pair<std::unique_ptr<svg::Text>, std::unique_ptr<svg::Text>>
                 AddBusLabels(SphereProjector& project, int index_color, const Stop* stop, std::string_view name);
             std::set<std::string_view> RenderBuses(SphereProjector& project, svg::Document& doc_to_render);
             void RenderStops(SphereProjector& project, svg::Document& doc_to_render, std::set<std::string_view> stops_in_buses);

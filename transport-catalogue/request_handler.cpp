@@ -4,11 +4,11 @@
 
 namespace tr_cat {
     namespace interface {
-        void RequestInterface::AddStops () {
-            std::for_each(stops_.begin(), stops_.end(), [&](StopInput& stop) {tr_cat_.AddStop(stop.name, stop.coordinates);});
+        void RequestInterface::AddStops() {
+            std::for_each(stops_.begin(), stops_.end(), [&](StopInput& stop) {tr_cat_.AddStop(stop.name, stop.coordinates); });
         }
 
-        void RequestInterface::AddDistances () {
+        void RequestInterface::AddDistances() {
             for (auto& [lhs, stops] : distances_) {
                 for (auto& [rhs, value] : stops) {
                     tr_cat_.AddDistance(lhs, rhs, value);
@@ -16,8 +16,8 @@ namespace tr_cat {
             }
         }
 
-        void RequestInterface::AddBuses () {
-            std::for_each(buses_.begin(), buses_.end(), [&](BusInput& bus) {tr_cat_.AddBus(bus.name, bus.stops, bus.is_ring);});
+        void RequestInterface::AddBuses() {
+            std::for_each(buses_.begin(), buses_.end(), [&](BusInput& bus) {tr_cat_.AddBus(bus.name, bus.stops, bus.is_ring); });
         }
 
         void RequestInterface::GetAnswers() {
@@ -28,21 +28,24 @@ namespace tr_cat {
                         answers_.push_back(stat.id);
                         continue;
                     }
-                    answers_.push_back(BusOutput{stat.id, *bus});
+                    answers_.push_back(BusOutput{ stat.id, *bus });
 
-                } else if (stat.type == "Stop"s) {
+                }
+                else if (stat.type == "Stop"s) {
                     std::optional<const Stop*> stop = tr_cat_.GetStopInfo(stat.name);
                     if (!stop) {
                         answers_.push_back(stat.id);
                         continue;
                     }
-                    answers_.push_back(StopOutput{stat.id, *stop});
+                    answers_.push_back(StopOutput{ stat.id, *stop });
 
-                } else if (stat.type == "Map"s) {
+                }
+                else if (stat.type == "Map"s) {
                     answers_.push_back(MapOutput(stat.id, tr_cat_));
 
-                } else {
-                    throw std::invalid_argument ("Invalid Stat"s);
+                }
+                else {
+                    throw std::invalid_argument("Invalid Stat"s);
                 }
             }
         }

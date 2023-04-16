@@ -40,22 +40,22 @@ namespace tr_cat {
             std::vector<std::string_view> buses_;
 
         public:             // methods
-            void AddStop (std::string_view name, geo::Coordinates coords);
-            void AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring);
+            void AddStop(std::string_view name, geo::Coordinates coords);
+            void AddBus(std::string_view name, std::vector<std::string_view>& stops, const bool is_ring);
             void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
-            std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
-            std::optional<const Stop*> GetStopInfo (std::string_view name) const;
+            std::optional<const Bus*>  GetBusInfo(std::string_view name) const;
+            std::optional<const Stop*> GetStopInfo(std::string_view name) const;
             auto begin() const { return buses_.begin(); }
             auto end() const { return buses_.end(); }
             size_t size() const { return buses_.size(); }
             size_t empty() const { return buses_.empty(); }
 
         private:            // methods
-            int ComputeRouteDistance (std::string_view name) const;
-            double ComputeGeoRouteDistance (std::string_view name) const;
+            int ComputeRouteDistance(std::string_view name) const;
+            double ComputeGeoRouteDistance(std::string_view name) const;
             int GetDistance(const Stop* lhs, const Stop* rhs) const;
-            Stop* FindStop (std::string_view name) const;
-            Bus* FindBus (std:: string_view name)const;
+            Stop* FindStop(std::string_view name) const;
+            Bus* FindBus(std::string_view name)const;
         };
     }       // namespace aggregations
 }           // namespace tr_cat

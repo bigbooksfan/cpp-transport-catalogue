@@ -1,17 +1,28 @@
-#include "transport_catalogue.h"
-#include "request_handler.h"
-#include "json_reader.h"
-//#include "tests.h"
-
 #include <cassert>
 #include <fstream>
 #include <iostream>
 
+#include "transport_catalogue.h"
+#include "request_handler.h"
+#include "json_reader.h"
+
+//#define TEST_MODE
+
+#ifdef TEST_MODE
+#include "test.h"
+#endif
+
 int main() {
-    //tests::Test();    
+    using namespace std::string_literals;
+    using namespace tr_cat;
+
+#ifdef TEST_MODE
+    tests::Test();
+#endif
+
     tr_cat::aggregations::TransportCatalogue catalog;
     tr_cat::interface::JsonReader reader(catalog);
     tr_cat::interface::Process(reader);
-    //tr_cat::render::MapRenderer renderer (catalog, reader.GetRenderSettings(), std::cout);
-    //renderer.Render();
+
+    return 0;
 }

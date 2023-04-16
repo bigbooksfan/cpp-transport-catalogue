@@ -31,19 +31,19 @@ namespace tr_cat {
             };
 
         public:             // constructors
-            explicit JsonReader(aggregations::TransportCatalogue& catalog) 
-             : RequestInterface (catalog) { }
-            JsonReader(aggregations::TransportCatalogue& catalog, std::istream& input) 
-             : RequestInterface (catalog, input) { }
-            JsonReader(aggregations::TransportCatalogue& catalog, std::ostream& output) 
-             : RequestInterface (catalog, output) { }
-            JsonReader(aggregations::TransportCatalogue& catalog, std::istream& input, std::ostream& output) 
-             : RequestInterface (catalog, input, output) { }
+            explicit JsonReader(aggregations::TransportCatalogue& catalog)
+                : RequestInterface(catalog) { }
+            JsonReader(aggregations::TransportCatalogue& catalog, std::istream& input)
+                : RequestInterface(catalog, input) { }
+            JsonReader(aggregations::TransportCatalogue& catalog, std::ostream& output)
+                : RequestInterface(catalog, output) { }
+            JsonReader(aggregations::TransportCatalogue& catalog, std::istream& input, std::ostream& output)
+                : RequestInterface(catalog, input, output) { }
 
         public:             // methods
-            void ReadDocument () override;
-            void ParseDocument () override;
-            void PrintAnswers () override;
+            void ReadDocument() override;
+            void ParseDocument() override;
+            void PrintAnswers() override;
             bool TestingFilesOutput(std::string filename_lhs, std::string filename_rhs) override;
             const render::RenderSettings& GetRenderSettings() const;
 

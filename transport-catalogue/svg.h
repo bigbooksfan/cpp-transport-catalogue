@@ -12,9 +12,9 @@ namespace svg {
     struct Rgb {
         Rgb() = default;
         Rgb(uint8_t r, uint8_t g, uint8_t b)
-         : red(r), green(g), blue(b) { }
+            : red(r), green(g), blue(b) { }
         Rgb(int r, int g, int b)
-         : red(r), green(g), blue(b) { }
+            : red(r), green(g), blue(b) { }
         uint8_t red = 0;
         uint8_t green = 0;
         uint8_t blue = 0;
@@ -23,9 +23,9 @@ namespace svg {
     struct Rgba {
         Rgba() = default;
         Rgba(uint8_t r, uint8_t g, uint8_t b, double o)
-         : red(r), green(g), blue(b), opacity(o){}
+            : red(r), green(g), blue(b), opacity(o) {}
         Rgba(int r, int g, int b, double o)
-         : red(r), green(g), blue(b), opacity(o){}
+            : red(r), green(g), blue(b), opacity(o) {}
         uint8_t red = 0;
         uint8_t green = 0;
         uint8_t blue = 0;
@@ -70,7 +70,7 @@ namespace svg {
             : out(out), indent_step(indent_step), indent(indent) { }
 
         RenderContext Indented() const {
-            return {out, indent_step, indent + indent_step};
+            return { out, indent_step, indent + indent_step };
         }
 
         void RenderIndent() const {
@@ -155,7 +155,8 @@ namespace svg {
         }
     };
 
-    class Circle final : public Object, public PathProps<Circle> {\
+    class Circle final : public Object, public PathProps<Circle> {
+        \
     private:            // fields
         Point center_;
         double radius_ = 1.0;
@@ -165,7 +166,7 @@ namespace svg {
         Circle& SetRadius(double radius);
 
     private:            // methods
-        void RenderObject(const RenderContext& context) const override;\
+        void RenderObject(const RenderContext& context) const override; \
     };
 
     class Polyline final : public Object, public PathProps<Polyline> {
@@ -203,7 +204,7 @@ namespace svg {
     class ObjectContainer {
     public:
         template <typename Obj>
-        void Add (Obj object) { AddPtr(std::make_unique<Obj>(object)); }
+        void Add(Obj object) { AddPtr(std::make_unique<Obj>(object)); }
         virtual void AddPtr(std::unique_ptr<Object>&& obj) = 0;
         virtual ~ObjectContainer() = default;
     };
