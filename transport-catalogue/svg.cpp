@@ -1,6 +1,7 @@
 #include "svg.h"
 
 namespace svg {
+
     using namespace std::literals;
 
     std::ostream& operator<< (std::ostream& out, StrokeLineCap elem) {
@@ -92,7 +93,7 @@ namespace svg {
 
     void Polyline::RenderObject(const RenderContext& context) const {
         auto& out = context.out;
-        out << " <polyline points=\""sv;
+        out << "<polyline points=\""sv;
         bool is_first = true;
         for (const Point& point : points_) {
             if (!is_first) {
@@ -104,7 +105,9 @@ namespace svg {
             out << point.x << ","sv << point.y;
         }
         out << "\""sv;
+
         RenderAttrs(out);
+
         out << "/>"sv;
     }
 
@@ -158,7 +161,7 @@ namespace svg {
             case '"':
                 out << "&quot;"sv;
                 break;
-            case '\'':
+            case 39: // '
                 out << "&apos;"sv;
                 break;
             case '<':
@@ -191,4 +194,4 @@ namespace svg {
         }
         out << "</svg>"sv;
     }
-}       // namespace svg
+}  // namespace svg

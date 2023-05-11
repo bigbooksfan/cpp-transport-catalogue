@@ -59,4 +59,4 @@ namespace json {
         Node Build();
         ~Builder() override = default;
     };
-}           // namespace json       
+}           // namespace json

@@ -5,6 +5,7 @@
 #include <deque>
 #include <unordered_map>
 #include <optional>
+#include <algorithm>
 
 #include "geo.h"
 #include "domain.h"
@@ -38,6 +39,7 @@ namespace tr_cat {
             std::unordered_map<std::string_view, Stop*> stops_container_;
             std::unordered_map<std::string_view, Bus*> buses_container_;
             std::vector<std::string_view> buses_;
+            size_t vertex_count_ = 0;
 
         public:             // methods
             void AddStop(std::string_view name, geo::Coordinates coords);
@@ -45,6 +47,8 @@ namespace tr_cat {
             void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
             std::optional<const Bus*>  GetBusInfo(std::string_view name) const;
             std::optional<const Stop*> GetStopInfo(std::string_view name) const;
+            size_t GetVertexCount() const { return vertex_count_; }
+            int GetDistance(const Stop* lhs, const Stop* rhs) const;
             auto begin() const { return buses_.begin(); }
             auto end() const { return buses_.end(); }
             size_t size() const { return buses_.size(); }
@@ -53,7 +57,6 @@ namespace tr_cat {
         private:            // methods
             int ComputeRouteDistance(std::string_view name) const;
             double ComputeGeoRouteDistance(std::string_view name) const;
-            int GetDistance(const Stop* lhs, const Stop* rhs) const;
             Stop* FindStop(std::string_view name) const;
             Bus* FindBus(std::string_view name)const;
         };

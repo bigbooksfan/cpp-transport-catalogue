@@ -44,6 +44,15 @@ namespace tr_cat {
                     answers_.push_back(MapOutput(stat.id, tr_cat_));
 
                 }
+                else if (stat.type == "Route"s) {
+                    std::optional<const Stop*> from = tr_cat_.GetStopInfo(stat.from);
+                    std::optional<const Stop*> to = tr_cat_.GetStopInfo(stat.to);
+                    if (!from || !to) {
+                        answers_.push_back(stat.id);
+                        continue;
+                    }
+                    answers_.push_back(RouteOutput({ stat.id, *from, *to }));
+                }
                 else {
                     throw std::invalid_argument("Invalid Stat"s);
                 }
@@ -55,9 +64,9 @@ namespace tr_cat {
             reader.AddStops();
             reader.AddDistances();
             reader.AddBuses();
+            reader.CreateGraph();
             reader.GetAnswers();
             reader.PrintAnswers();
         }
-
     }           // namespace interface
 }               // namespace tr_cat

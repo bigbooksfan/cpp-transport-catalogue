@@ -1,6 +1,8 @@
-#include <ostream>
-#include <algorithm>
+#pragma once
+
+#include <iostream>
 #include <unordered_set>
+#include <algorithm>
 
 #include "svg.h"
 #include "transport_catalogue.h"
@@ -8,7 +10,6 @@
 
 namespace tr_cat {
     namespace render {
-
         inline bool IsZero(double value) {
             return std::abs(value) < EPSILON;
         }
@@ -104,7 +105,7 @@ namespace tr_cat {
 
         struct CoordinatesHasher {
             size_t operator() (const geo::Coordinates& coords) const {
-                return std::hash<double>{}(coords.lat) + std::hash<double>{}(coords.lng) * 37;
+                return std::hash<double>{}(coords.lat) + std::hash<double>{}(coords.lng)*37;
             }
         };
 
@@ -116,12 +117,15 @@ namespace tr_cat {
 
         public:             // constructors
             MapRenderer() = delete;
+            MapRenderer(const aggregations::TransportCatalogue& catalog) : tr_cat_(catalog) { }
             MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings)
-                :tr_cat_(catalog), settings_(settings) {}
+                :tr_cat_(catalog), settings_(settings) { }
             MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings, std::ostream& output)
-                :tr_cat_(catalog), settings_(settings), output_(output) {}
+                :tr_cat_(catalog), settings_(settings), output_(output) { }
 
-            void Render();
+        public:             // methods
+            void SetRenderSettings(RenderSettings&& settings) { settings_ = settings; }
+            void Render(std::ostream& out = std::cout);
 
         private:            // methods
             std::unordered_set<geo::Coordinates, CoordinatesHasher> CollectCoordinates() const;
@@ -130,5 +134,5 @@ namespace tr_cat {
             std::set<std::string_view> RenderBuses(SphereProjector& project, svg::Document& doc_to_render);
             void RenderStops(SphereProjector& project, svg::Document& doc_to_render, std::set<std::string_view> stops_in_buses);
         };
-    }           // namespace render
-}               // namespace tr_cat
+    }       // namespace render
+}           // namespace tr_cat
