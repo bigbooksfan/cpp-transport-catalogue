@@ -1,19 +1,22 @@
 #include "map_renderer.h"
 
+
 namespace tr_cat {
     namespace render {
         using namespace aggregations;
         using namespace svg;
 
-        void MapRenderer::Render() {
+        using namespace std::string_literals;
+
+        void MapRenderer::Render(std::ostream& out) {
             Document doc_to_render;
             auto coords = move(CollectCoordinates());
             SphereProjector project(coords.begin(), coords.end(), settings_.width, settings_.height, settings_.padding);
 
-            std::set<std::string_view> stops_in_buses = std::move(RenderBuses(project, doc_to_render));
+            std::set<std::string_view> stops_in_buses = move(RenderBuses(project, doc_to_render));
             RenderStops(project, doc_to_render, stops_in_buses);
 
-            doc_to_render.Render(output_);
+            doc_to_render.Render(out);
         }
 
         std::unordered_set<geo::Coordinates, CoordinatesHasher> MapRenderer::CollectCoordinates() const {
@@ -30,17 +33,17 @@ namespace tr_cat {
             return result;
         }
 
-        std::pair<std::unique_ptr<Text>, std::unique_ptr<Text>> MapRenderer::AddBusLabels(
-            SphereProjector& project, int index_color, const Stop* stop, std::string_view name) {
+        std::pair<std::unique_ptr<Text>, std::unique_ptr<Text>> MapRenderer::AddBusLabels(SphereProjector& project, int index_color,
+            const Stop* stop, std::string_view name) {
             Text bus_name_underlabel, bus_name_label;
             bus_name_underlabel.SetData(static_cast<std::string>(name)).SetPosition(project(stop->coordinates))
-                .SetOffset(settings_.bus_label_offset).SetFontSize(settings_.bus_label_font_size)
+                .SetOffset(settings_.bus_label_offset).SetFontSize(static_cast<uint32_t>(settings_.bus_label_font_size))
                 .SetFontFamily("Verdana"s).SetFontWeight("bold"s).SetStrokeWidth(settings_.underlayer_width)
                 .SetFillColor(settings_.underlayer_color).SetStrokeColor(settings_.underlayer_color)
                 .SetStrokeLineCap(StrokeLineCap::ROUND).SetStrokeLineJoin(StrokeLineJoin::ROUND);
 
             bus_name_label.SetData(static_cast<std::string>(name)).SetPosition(project(stop->coordinates))
-                .SetOffset(settings_.bus_label_offset).SetFontSize(settings_.bus_label_font_size)
+                .SetOffset(settings_.bus_label_offset).SetFontSize(static_cast<uint32_t>(settings_.bus_label_font_size))
                 .SetFontFamily("Verdana"s).SetFontWeight("bold"s).SetFillColor(settings_.color_palette[index_color]);
 
             return { std::make_unique<Text>(bus_name_underlabel), std::make_unique<Text>(bus_name_label) };
@@ -48,7 +51,7 @@ namespace tr_cat {
 
         std::set<std::string_view> MapRenderer::RenderBuses(SphereProjector& project, Document& doc_to_render) {
             int index_color = 0;
-            int color_counts = settings_.color_palette.size();
+            int color_counts = static_cast<int>(settings_.color_palette.size());
             std::vector<std::unique_ptr<Object>> bus_lines;
             std::vector<std::unique_ptr<Object>> bus_labels;
             bus_lines.reserve(tr_cat_.size());
@@ -56,6 +59,7 @@ namespace tr_cat {
             std::set<std::string_view> stops_in_buses;
 
             for (std::string_view bus_name : tr_cat_) {
+
                 index_color %= color_counts;
 
                 const Bus* bus = *tr_cat_.GetBusInfo(bus_name);
@@ -67,7 +71,8 @@ namespace tr_cat {
                     .SetStrokeColor(settings_.color_palette[index_color]).SetStrokeWidth(settings_.line_width)
                     .SetStrokeLineCap(StrokeLineCap::ROUND).SetStrokeLineJoin(StrokeLineJoin::ROUND));
 
-                std::unique_ptr<Text> bus_label_start, bus_underlabel_start, bus_label_finish, bus_underlabel_finish;
+                std::unique_ptr<Text> bus_label_start, bus_underlabel_start,
+                    bus_label_finish, bus_underlabel_finish;
                 tie(bus_underlabel_start, bus_label_start) = AddBusLabels(project, index_color, bus->stops.front(), bus_name);
                 if (!bus->is_ring && (bus->stops.front() != bus->stops[bus->stops.size() / 2])) {
                     tie(bus_underlabel_finish, bus_label_finish) = move(AddBusLabels(project,
@@ -79,21 +84,21 @@ namespace tr_cat {
                     stops_in_buses.insert(stop->name);
                 }
 
-                bus_lines.push_back(move(line));
-                bus_labels.push_back(move(bus_underlabel_start));
-                bus_labels.push_back(move(bus_label_start));
+                bus_lines.push_back(std::move(line));
+                bus_labels.push_back(std::move(bus_underlabel_start));
+                bus_labels.push_back(std::move(bus_label_start));
                 if (bus_label_finish && bus_underlabel_finish) {
-                    bus_labels.push_back(move(bus_underlabel_finish));
-                    bus_labels.push_back(move(bus_label_finish));
+                    bus_labels.push_back(std::move(bus_underlabel_finish));
+                    bus_labels.push_back(std::move(bus_label_finish));
                 }
                 ++index_color;
             }
 
             for (auto& pointer : bus_lines) {
-                doc_to_render.AddPtr(move(pointer));
+                doc_to_render.AddPtr(std::move(pointer));
             }
             for (auto& pointer : bus_labels) {
-                doc_to_render.AddPtr(move(pointer));
+                doc_to_render.AddPtr(std::move(pointer));
             }
             return stops_in_buses;
         }
@@ -114,26 +119,26 @@ namespace tr_cat {
 
                 std::unique_ptr<Text> stop_underlabel = std::make_unique<Text>(Text().SetPosition(coords)
                     .SetData(static_cast<std::string>(stop_name)).SetOffset(settings_.stop_label_offset)
-                    .SetFontSize(settings_.stop_label_font_size).SetFontFamily("Verdana"s)
+                    .SetFontSize(static_cast<uint32_t>(settings_.stop_label_font_size)).SetFontFamily("Verdana"s)
                     .SetFillColor(settings_.underlayer_color).SetStrokeColor(settings_.underlayer_color)
                     .SetStrokeWidth(settings_.underlayer_width).SetStrokeLineCap(StrokeLineCap::ROUND)
                     .SetStrokeLineJoin(StrokeLineJoin::ROUND));
                 std::unique_ptr<Text> stop_label = std::make_unique<Text>(Text().SetPosition(coords)
                     .SetData(static_cast<std::string>(stop_name)).SetOffset(settings_.stop_label_offset)
-                    .SetFontSize(settings_.stop_label_font_size).SetFontFamily("Verdana"s)
+                    .SetFontSize(static_cast<uint32_t>(settings_.stop_label_font_size)).SetFontFamily("Verdana"s)
                     .SetFillColor("black"s));
 
-                stop_points.push_back(move(stop_point));
-                stop_labels.push_back(move(stop_underlabel));
-                stop_labels.push_back(move(stop_label));
+                stop_points.push_back(std::move(stop_point));
+                stop_labels.push_back(std::move(stop_underlabel));
+                stop_labels.push_back(std::move(stop_label));
             }
 
             for (auto& pointer : stop_points) {
-                doc_to_render.AddPtr(move(pointer));
+                doc_to_render.AddPtr(std::move(pointer));
             }
             for (auto& pointer : stop_labels) {
-                doc_to_render.AddPtr(move(pointer));
+                doc_to_render.AddPtr(std::move(pointer));
             }
         }
-    }           // namespace render
-}               // namespace tr_cat
+    }       // namespace render
+}           // namespace tr_cat

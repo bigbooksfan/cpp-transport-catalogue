@@ -155,8 +155,7 @@ namespace svg {
         }
     };
 
-    class Circle final : public Object, public PathProps<Circle> {
-        \
+    class Circle final : public Object, public PathProps<Circle> {        
     private:            // fields
         Point center_;
         double radius_ = 1.0;

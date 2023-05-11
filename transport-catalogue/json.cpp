@@ -433,5 +433,4 @@ namespace json {
         PrintNode(doc.GetRoot(), ctx);
         out << endl;
     }
-
 }  // namespace json
