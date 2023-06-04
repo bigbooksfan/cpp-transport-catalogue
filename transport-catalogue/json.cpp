@@ -1,12 +1,14 @@
 #include "json.h"
 
-using namespace std;
-
 namespace json {
+    using namespace std::string_literals;
+    using namespace std::string_view_literals;
+
     namespace {
-        Node LoadNode(istream& input);
+        Node LoadNode(std::istream& input);
         Node LoadNumber(std::istream& input) {
             std::string parsed_num;
+
             // reads the next character from input into parsed_num
             auto read_char = [&parsed_num, &input] {
                 parsed_num += static_cast<char>(input.get());
@@ -124,11 +126,11 @@ namespace json {
                 ++it;
             }
 
-            return move(Node(move(s)));
+            return Node(move(s));
         }
 
-        Node LoadNull(istream& input) {
-            string s;
+        Node LoadNull(std::istream& input) {
+            std::string s;
             char c;
             for (int i = 0; input >> c && i < 4; ++i) {
                 s += c;
@@ -136,18 +138,18 @@ namespace json {
             if (s != "null"s) {
                 throw ParsingError("Unexpected value"s);
             }
-            return move(Node());
+            return Node();
         }
 
-        Node LoadBool(istream& input) {
-            string s;
+        Node LoadBool(std::istream& input) {
+            std::string s;
             char c;
 
             for (; input >> c && s.size() < 5 && c != 'e'; s += c);
             s += c;
 
             if (s == "true"s) {
-                return move(Node(true));
+                return Node(true);
             }
             if (s == "false"s) {
                 return Node(false);
@@ -155,24 +157,24 @@ namespace json {
             throw ParsingError("Unexpected value"s);
         }
 
-        Node LoadArray(istream& input) {
+        Node LoadArray(std::istream& input) {
             Array result;
             char c;
             for (; input >> c && c != ']';) {
                 if (c != ',') {
                     input.putback(c);
                 }
-                result.push_back(move(LoadNode(input)));
+                result.push_back(std::move(LoadNode(input)));
             }
 
             if (c != ']') {
                 throw ParsingError("] not expected"s);
             }
 
-            return move(Node(move(result)));
+            return Node(move(result));
         }
 
-        Node LoadDict(istream& input) {
+        Node LoadDict(std::istream& input) {
             Dict result;
             char c;
             for (; input >> c && c != '}';) {
@@ -180,9 +182,9 @@ namespace json {
                     input >> c;
                 }
 
-                string key = LoadString(input).AsString();
+                std::string key = LoadString(input).AsString();
                 input >> c;
-                result.insert({ move(key), LoadNode(input) });
+                result.insert({ std::move(key), LoadNode(input) });
             }
 
             if (c != '}') {
@@ -192,17 +194,17 @@ namespace json {
             return Node(move(result));
         }
 
-        Node LoadNode(istream& input) {
+        Node LoadNode(std::istream& input) {
             char c;
             if (input >> c) {
                 if (c == '[') {
-                    return move(LoadArray(input));
+                    return std::move(LoadArray(input));
                 }
                 else if (c == '{') {
-                    return move(LoadDict(input));
+                    return std::move(LoadDict(input));
                 }
                 else if (c == '"') {
-                    return move(LoadString(input));
+                    return std::move(LoadString(input));
                 }
                 else if (c == 'n') {
                     input.putback(c);
@@ -222,71 +224,59 @@ namespace json {
 
     }  // namespace
 
-    Node::Node(bool value)
-        : data_(value) { }
-
-    Node::Node(const int value)
-        : data_(value) { }
-
-    Node::Node(const double value)
-        : data_(value) { }
-
-    Node::Node(const string value)
-        : data_(move(value)) { }
-
-    Node::Node(const Array value)
-        : data_(move(value)) { }
-
-    Node::Node(const Dict map)
-        : data_(move(map)) { }
-
+    Node::Node(bool value) : data_(value) { }
+    Node::Node(const int value) : data_(value) { }
+    Node::Node(const double value) : data_(value) { }
+    Node::Node(const std::string value) : data_(std::move(value)) { }
+    Node::Node(const Array value) : data_(std::move(value)) { }
+    Node::Node(const Dict map) : data_(std::move(map)) { }
     bool Node::AsBool() {
         if (!IsBool()) {
-            throw logic_error("Is not Bool"s);
+            throw std::logic_error("Is not Bool"s);
         }
-        return get<bool>(data_);
+        return std::get<bool>(data_);
     }
 
     int Node::AsInt() {
         if (!IsInt()) {
-            throw logic_error("Is not Int"s);
+            throw std::logic_error("Is not Int"s);
         }
-        return get<int>(data_);
+        return std::get<int>(data_);
     }
 
     double Node::AsDouble() {
-        if (holds_alternative<double>(data_)) {
-            return get<double>(data_);
+        if (std::holds_alternative<double>(data_)) {
+            return std::get<double>(data_);
         }
         if (IsInt()) {
-            return static_cast<double>(get<int>(data_));
+            return static_cast<double>(std::get<int>(data_));
         }
-        throw logic_error("Is not Double"s);
+        throw std::logic_error("Is not Double"s);
     }
 
-    string& Node::AsString() {
+    std::string& Node::AsString() {
         if (!IsString()) {
-            throw logic_error("Is not String"s);
+            throw std::logic_error("Is not String"s);
         }
-        return get<string>(data_);
+        return std::get<std::string>(data_);
     }
 
     Array& Node::AsArray() {
         if (!IsArray()) {
-            throw logic_error("Is not Array"s);
+            throw std::logic_error("Is not Array"s);
         }
-        return get<Array>(data_);
+        return std::get<Array>(data_);
     }
 
     Dict& Node::AsMap() {
         if (!IsMap()) {
-            throw logic_error("Is not Map"s);
+            throw std::logic_error("Is not Map"s);
         }
-        return get<Dict>(data_);
+        return std::get<Dict>(data_);
     }
 
     Document::Document(Node root)
-        : root_(move(root)) {
+        : root_(std::move(root)) {
     }
 
     Document& Document::operator= (Document& other) {
@@ -300,12 +290,12 @@ namespace json {
     }
 
     Document& Document::operator= (Document&& other) {
-        root_ = move(other.root_);
+        root_ = std::move(other.root_);
         return *this;
     }
 
     Document& Document::operator= (Node&& other) {
-        root_ = move(other);
+        root_ = std::move(other);
         return *this;
     }
 
@@ -313,7 +303,7 @@ namespace json {
         return root_;
     }
 
-    Document Load(istream& input) {
+    Document Load(std::istream& input) {
         return Document{ LoadNode(input) };
     }
 
@@ -339,7 +329,7 @@ namespace json {
         ctx.out << "null"sv;
     }
 
-    void PrintValue(const string& value, const  PrintContext& ctx, bool) {
+    void PrintValue(const std::string& value, const  PrintContext& ctx, bool) {
         ctx.out << '"';
         for (char c : value) {
             switch (c) {
@@ -368,11 +358,12 @@ namespace json {
 
     template <typename Number>
     void PrintValue(const Number value, const PrintContext& ctx, bool) {
-        ctx.out << boolalpha;
+        ctx.out << std::boolalpha;
         ctx.out << value;
     }
 
     void PrintValue(const Array& value, const PrintContext& ctx, bool enter = true) {
+
         auto print_elems = [&value](const PrintContext& ctx) {
             bool is_first = false;
             for (const auto& elem : value) {
@@ -398,6 +389,7 @@ namespace json {
     }
 
     void PrintValue(const Dict& value, const PrintContext& ctx, bool enter = true) {
+
         auto print_elems = [&value](const PrintContext& ctx) {
             bool is_first = false;
             for (const auto& elem : value) {
@@ -425,12 +417,11 @@ namespace json {
 
     void PrintNode(const Node& node, const PrintContext& ctx, bool enter) {
         visit([&ctx, enter](const auto& value) {PrintValue(value, ctx, enter); }, node.GetValue());
-
     }
 
     void Print(Document& doc, std::ostream& out) {
         PrintContext ctx({ out, TAB, 0 });
         PrintNode(doc.GetRoot(), ctx);
-        out << endl;
+        out << std::endl;
     }
 }  // namespace json

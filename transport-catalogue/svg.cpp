@@ -1,9 +1,7 @@
 #include "svg.h"
 
 namespace svg {
-
     using namespace std::literals;
-
     std::ostream& operator<< (std::ostream& out, StrokeLineCap elem) {
         switch (elem) {
         case StrokeLineCap::BUTT:
@@ -161,7 +159,7 @@ namespace svg {
             case '"':
                 out << "&quot;"sv;
                 break;
-            case 39: // '
+            case 39: //символ '
                 out << "&apos;"sv;
                 break;
             case '<':

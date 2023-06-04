@@ -11,10 +11,8 @@
 namespace svg {
     struct Rgb {
         Rgb() = default;
-        Rgb(uint8_t r, uint8_t g, uint8_t b)
-            : red(r), green(g), blue(b) { }
-        Rgb(int r, int g, int b)
-            : red(r), green(g), blue(b) { }
+        Rgb(unsigned int r, unsigned int g, unsigned int b) : red(r), green(g), blue(b) { }
+        Rgb(int r, int g, int b) : red(r), green(g), blue(b) { }
         uint8_t red = 0;
         uint8_t green = 0;
         uint8_t blue = 0;
@@ -22,10 +20,8 @@ namespace svg {
 
     struct Rgba {
         Rgba() = default;
-        Rgba(uint8_t r, uint8_t g, uint8_t b, double o)
-            : red(r), green(g), blue(b), opacity(o) {}
-        Rgba(int r, int g, int b, double o)
-            : red(r), green(g), blue(b), opacity(o) {}
+        Rgba(unsigned int r, unsigned int g, unsigned int b, double o) : red(r), green(g), blue(b), opacity(o) { }
+        Rgba(int r, int g, int b, double o) : red(r), green(g), blue(b), opacity(o) { }
         uint8_t red = 0;
         uint8_t green = 0;
         uint8_t blue = 0;
@@ -34,7 +30,7 @@ namespace svg {
 
     using Color = std::variant<std::monostate, std::string, Rgb, Rgba>;
 
-    inline const Color NoneColor = { };
+    inline const Color NoneColor = {};
 
     enum class StrokeLineCap {
         BUTT,
@@ -56,21 +52,18 @@ namespace svg {
 
     struct Point {
         Point() = default;
-        Point(double x, double y)
-            : x(x)
-            , y(y) {
-        }
+        Point(double x, double y) : x(x) , y(y) { }
         double x = 0;
         double y = 0;
     };
 
     struct RenderContext {
         RenderContext(std::ostream& out) : out(out) { }
-        RenderContext(std::ostream& out, int indent_step, int indent = 0)
-            : out(out), indent_step(indent_step), indent(indent) { }
+        RenderContext(std::ostream& out, int indent_step, int indent = 0) 
+            : out(out) , indent_step(indent_step) , indent(indent) { }
 
         RenderContext Indented() const {
-            return { out, indent_step, indent + indent_step };
+            return {out, indent_step, indent + indent_step};
         }
 
         void RenderIndent() const {
@@ -85,23 +78,26 @@ namespace svg {
     };
 
     class Object {
-    public:             // constructors
-        void Render(const RenderContext& context) const;
+    public:
         virtual ~Object() = default;
-    private:            // methods
+        void Render(const RenderContext& context) const;
+    private:
         virtual void RenderObject(const RenderContext& context) const = 0;
     };
 
     template <typename Owner>
     class PathProps {
-    private:                // fields
+    private:        // fields
         std::optional<Color> fill_color_;
         std::optional<Color> stroke_color_;
         std::optional<double> stroke_width_;
         std::optional<StrokeLineCap> stroke_linecap_;
         std::optional<StrokeLineJoin> stroke_linejoin_;
 
-    public:                 // methods
+    protected:
+        ~PathProps() = default;
+
+    public:         // methods
         Owner& SetFillColor(Color color) {
             fill_color_ = std::move(color);
             return AsOwner();
@@ -110,28 +106,22 @@ namespace svg {
             stroke_color_ = std::move(color);
             return AsOwner();
         }
-
         Owner& SetStrokeWidth(double width) {
-            stroke_width_ = width;
-            return AsOwner();
+        stroke_width_ = width;
+        return AsOwner();
         }
-
         Owner& SetStrokeLineCap(StrokeLineCap line_cap) {
             stroke_linecap_ = line_cap;
             return AsOwner();
         }
-
         Owner& SetStrokeLineJoin(StrokeLineJoin line_join) {
             stroke_linejoin_ = line_join;
             return AsOwner();
         }
 
-    protected:
-        ~PathProps() = default;
-
+    protected:      // methods
         void RenderAttrs(std::ostream& out) const {
-            using namespace std::literals;
-
+            using namespace std::string_view_literals;
             if (fill_color_) {
                 out << " fill=\""sv << *fill_color_ << "\""sv;
             }
@@ -149,38 +139,39 @@ namespace svg {
             }
         }
 
-    private:            // methods
+    private:        // methods
         Owner& AsOwner() {
             return static_cast<Owner&>(*this);
         }
+
     };
 
-    class Circle final : public Object, public PathProps<Circle> {        
-    private:            // fields
+    class Circle final : public Object, public PathProps<Circle> {
+    private:        // fields
         Point center_;
         double radius_ = 1.0;
 
-    public:             // methods
+    public:         // methods
         Circle& SetCenter(Point center);
         Circle& SetRadius(double radius);
 
-    private:            // methods
-        void RenderObject(const RenderContext& context) const override; \
-    };
-
-    class Polyline final : public Object, public PathProps<Polyline> {
-    private:            // fields
-        std::vector<Point> points_;
-
-    public:             // methods
-        Polyline& AddPoint(Point point);
-
-    private:            // methods
+    private:        // methods
         void RenderObject(const RenderContext& context) const override;
     };
 
+    class Polyline final : public Object, public PathProps<Polyline> {
+    private:        // fields
+        std::vector<Point> points_;
+
+    private:        // methods
+        void RenderObject(const RenderContext& context) const override;
+
+    public:
+        Polyline& AddPoint(Point point);
+    };
+
     class Text final : public Object, public PathProps<Text> {
-    private:            // fields
+    private:        // fields
         Point position_;
         Point offset_;
         uint32_t font_size_ = 1;
@@ -188,7 +179,7 @@ namespace svg {
         std::string font_family_;
         std::string data_;
 
-    public:             // methods
+    public:         // methods
         Text& SetPosition(Point pos);
         Text& SetOffset(Point offset);
         Text& SetFontSize(uint32_t size);
@@ -196,23 +187,25 @@ namespace svg {
         Text& SetFontWeight(std::string font_weight);
         Text& SetData(std::string data);
 
-    private:            // methods
+    private:        // methods
         void RenderObject(const RenderContext& context) const override;
     };
 
     class ObjectContainer {
     public:
         template <typename Obj>
-        void Add(Obj object) { AddPtr(std::make_unique<Obj>(object)); }
+        void Add (Obj object) {
+            AddPtr(std::make_unique<Obj>(object));
+        }
         virtual void AddPtr(std::unique_ptr<Object>&& obj) = 0;
         virtual ~ObjectContainer() = default;
     };
 
     class Document : public ObjectContainer {
-    private:            // fields
+    private:
         std::vector<std::unique_ptr<Object>> objects_;
 
-    public:             // methods
+    public:
         void AddPtr(std::unique_ptr<Object>&& obj) override;
         void Render(std::ostream& out) const;
     };

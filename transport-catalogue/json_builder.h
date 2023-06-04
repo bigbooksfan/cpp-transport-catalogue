@@ -11,7 +11,7 @@ namespace json {
 
     class ArrayReturn {
     public:
-        virtual ArrayReturn& Value(Node value) = 0;
+        virtual ArrayReturn& Value (Node value) = 0;
         virtual DictReturn& StartDict() = 0;
         virtual ArrayReturn& StartArray() = 0;
         virtual Builder& EndArray() = 0;
@@ -27,7 +27,7 @@ namespace json {
     };
 
     class DictReturn {
-    public:
+    public: 
         virtual KeyReturn& Key(std::string key) = 0;
         virtual Builder& EndDict() = 0;
         virtual ~DictReturn() = default;
@@ -43,7 +43,6 @@ namespace json {
             std::string value;
             bool is_value = false;
         };
-
         Node root_;
         std::deque<Node*> stack_;
         KeyWithFlag key_;
