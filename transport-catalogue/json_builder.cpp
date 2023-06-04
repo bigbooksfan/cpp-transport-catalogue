@@ -28,7 +28,7 @@ namespace json {
         throw std::logic_error("Start Array unexpected in this context"s);
     }
 
-    Builder& Builder::EndArray() {
+    Builder& Builder::EndArray(){
         if (stack_.empty()) {
             throw std::logic_error("Array is not started, but you say End"s);
         }
@@ -50,7 +50,7 @@ namespace json {
         throw std::logic_error("Key unexpected in this context"s);
     }
 
-    Builder& Builder::Value(Node value) {
+    Builder& Builder::Value(Node value){
         if (stack_.empty() && root_.IsNull()) {
             root_ = std::move(value);
             return *this;
@@ -70,7 +70,7 @@ namespace json {
         throw std::logic_error("Value unexpected in this context"s);
     }
 
-    Node Builder::Build() {
+    Node Builder::Build(){
         if (!stack_.empty()) {
             throw std::logic_error("Dict or Array is not ended"s);
         }
@@ -104,4 +104,5 @@ namespace json {
         }
         return false;
     }
-}           // namespace json
+
+}               // namespace json

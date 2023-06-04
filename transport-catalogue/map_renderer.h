@@ -1,8 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <unordered_set>
-#include <algorithm>
+#include <ostream>
 
 #include "svg.h"
 #include "transport_catalogue.h"
@@ -105,27 +103,25 @@ namespace tr_cat {
 
         struct CoordinatesHasher {
             size_t operator() (const geo::Coordinates& coords) const {
-                return std::hash<double>{}(coords.lat) + std::hash<double>{}(coords.lng)*37;
+                return std::hash<double>{}(coords.lat) + std::hash<double>{}(coords.lng) * 37;
             }
         };
 
         class MapRenderer {
         private:            // fields
-            const aggregations::TransportCatalogue& tr_cat_;
+            const aggregations::TransportCatalogue& catalog_;
             RenderSettings settings_;
-            std::ostream& output_ = std::cout;
 
         public:             // constructors
             MapRenderer() = delete;
-            MapRenderer(const aggregations::TransportCatalogue& catalog) : tr_cat_(catalog) { }
-            MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings)
-                :tr_cat_(catalog), settings_(settings) { }
-            MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings, std::ostream& output)
-                :tr_cat_(catalog), settings_(settings), output_(output) { }
+            MapRenderer(const aggregations::TransportCatalogue& catalog) : catalog_(catalog) { }
 
         public:             // methods
             void SetRenderSettings(RenderSettings&& settings) { settings_ = settings; }
             void Render(std::ostream& out = std::cout);
+
+            transport_catalog_serialize::RenderSettings Serialize() const;
+            bool Deserialize(transport_catalog_serialize::RenderSettings& settings);
 
         private:            // methods
             std::unordered_set<geo::Coordinates, CoordinatesHasher> CollectCoordinates() const;

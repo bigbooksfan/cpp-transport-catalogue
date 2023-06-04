@@ -12,17 +12,17 @@ namespace tr_cat {
         using namespace std::string_literals;
         class RequestInterface {
         private:                // fields
-            aggregations::TransportCatalogue& tr_cat_;
+            aggregations::TransportCatalogue& catalog_;
 
         public:                 // constructors
             explicit RequestInterface(aggregations::TransportCatalogue& catalog)
-                : tr_cat_(catalog) { }
+                : catalog_(catalog) { }
             RequestInterface(aggregations::TransportCatalogue& catalog, std::istream& input)
-                : tr_cat_(catalog), input_(input) { }
+                : catalog_(catalog), input_(input) { }
             RequestInterface(aggregations::TransportCatalogue& catalog, std::ostream& output)
-                : tr_cat_(catalog), output_(output) { }
+                : catalog_(catalog), output_(output) { }
             RequestInterface(aggregations::TransportCatalogue& catalog, std::istream& input, std::ostream& output)
-                : tr_cat_(catalog), input_(input), output_(output) { }
+                : catalog_(catalog), input_(input), output_(output) { }
 
             virtual ~RequestInterface() = default;
 
@@ -39,8 +39,11 @@ namespace tr_cat {
 
             virtual bool TestingFilesOutput(std::string filename_lhs, std::string filename_rhs) = 0;
 
+            virtual bool Serialize(bool with_graph) const = 0;
+            virtual bool Deserialize(bool with_graph) = 0;
+
         protected:          // necessary heritage
-            const aggregations::TransportCatalogue& GetCatalog() const { return tr_cat_; }
+            const aggregations::TransportCatalogue& GetCatalog() const { return catalog_; }
 
             // templates for data
             struct BusInput {

@@ -1,29 +1,29 @@
-#include "request_handler.h"
-
 #include <algorithm>
+
+#include "request_handler.h"
 
 namespace tr_cat {
     namespace interface {
         void RequestInterface::AddStops() {
-            std::for_each(stops_.begin(), stops_.end(), [&](StopInput& stop) {tr_cat_.AddStop(stop.name, stop.coordinates); });
+            std::for_each(stops_.begin(), stops_.end(), [&](StopInput& stop) {catalog_.AddStop(stop.name, stop.coordinates); });
         }
 
         void RequestInterface::AddDistances() {
             for (auto& [lhs, stops] : distances_) {
                 for (auto& [rhs, value] : stops) {
-                    tr_cat_.AddDistance(lhs, rhs, value);
+                    catalog_.AddDistance(lhs, rhs, value);
                 }
             }
         }
 
         void RequestInterface::AddBuses() {
-            std::for_each(buses_.begin(), buses_.end(), [&](BusInput& bus) {tr_cat_.AddBus(bus.name, bus.stops, bus.is_ring); });
+            std::for_each(buses_.begin(), buses_.end(), [&](BusInput& bus) {catalog_.AddBus(bus.name, bus.stops, bus.is_ring); });
         }
 
         void RequestInterface::GetAnswers() {
             for (const Stat& stat : stats_) {
                 if (stat.type == "Bus"s) {
-                    std::optional<const Bus*> bus = tr_cat_.GetBusInfo(stat.name);
+                    std::optional<const Bus*> bus = catalog_.GetBusInfo(stat.name);
                     if (!bus) {
                         answers_.push_back(stat.id);
                         continue;
@@ -32,7 +32,7 @@ namespace tr_cat {
 
                 }
                 else if (stat.type == "Stop"s) {
-                    std::optional<const Stop*> stop = tr_cat_.GetStopInfo(stat.name);
+                    std::optional<const Stop*> stop = catalog_.GetStopInfo(stat.name);
                     if (!stop) {
                         answers_.push_back(stat.id);
                         continue;
@@ -41,12 +41,12 @@ namespace tr_cat {
 
                 }
                 else if (stat.type == "Map"s) {
-                    answers_.push_back(MapOutput(stat.id, tr_cat_));
+                    answers_.push_back(MapOutput(stat.id, catalog_));
 
                 }
                 else if (stat.type == "Route"s) {
-                    std::optional<const Stop*> from = tr_cat_.GetStopInfo(stat.from);
-                    std::optional<const Stop*> to = tr_cat_.GetStopInfo(stat.to);
+                    std::optional<const Stop*> from = catalog_.GetStopInfo(stat.from);
+                    std::optional<const Stop*> to = catalog_.GetStopInfo(stat.to);
                     if (!from || !to) {
                         answers_.push_back(stat.id);
                         continue;

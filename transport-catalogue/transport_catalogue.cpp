@@ -5,25 +5,23 @@
 
 namespace tr_cat {
     namespace aggregations {
-
         void TransportCatalogue::AddStop(std::string_view name, geo::Coordinates coords) {
-            stops_data_.push_back({ move(static_cast<std::string>(name)), coords, {}, vertex_count_++ });
+            stops_data_.push_back({ static_cast<std::string>(name), coords, std::set<std::string_view>{}, vertex_count_++ });
             stops_container_[stops_data_.back().name] = &(stops_data_.back());
         }
 
-        void TransportCatalogue::AddBus(std::string_view name, std::vector<std::string_view>& stops, const bool is_ring) {
-            auto it = std::lower_bound(buses_.begin(), buses_.end(), name);
-            if (it != buses_.end() && *it == name) {
+        void TransportCatalogue::AddBus(const std::string_view name, std::vector<std::string_view>& stops, const bool is_ring) {
+            auto it = std::lower_bound(sorted_buses_.begin(), sorted_buses_.end(), name);
+            if (it != sorted_buses_.end() && *it == name) {
                 return;
             }
             buses_data_.push_back({ static_cast<std::string>(name), {} });
-            buses_.insert(it, buses_data_.back().name);
+            sorted_buses_.emplace(it, buses_data_.back().name);
 
             // adding the name of this bus to each stop
             for (std::string_view stop : stops) {
                 stops_container_[stop]->buses.insert(buses_data_.back().name);
             }
-
             std::vector<Stop*> tmp_stops(stops.size());
 
             // from names to pointers to existing stops
@@ -55,9 +53,7 @@ namespace tr_cat {
             }
 
             buses_data_.back().stops = move(tmp_stops);
-
             buses_container_.insert({ buses_data_.back().name, &(buses_data_.back()) });
-
             buses_data_.back().distance = ComputeRouteDistance(name);
             buses_data_.back().curvature = buses_data_.back().distance / ComputeGeoRouteDistance(name);
         }
@@ -65,7 +61,6 @@ namespace tr_cat {
         void TransportCatalogue::AddDistance(const std::string_view lhs_name, const std::string_view rhs_name, double distance) {
             const Stop* lhs = FindStop(lhs_name);
             const Stop* rhs = FindStop(rhs_name);
-
             distances_[{lhs, rhs}] = static_cast<int>(distance);
         }
 
@@ -85,6 +80,103 @@ namespace tr_cat {
             return stop;
         }
 
+        int TransportCatalogue::GetDistance(const Stop* lhs, const Stop* rhs) const {
+            if (distances_.count({ lhs, rhs })) {
+                return distances_.at({ lhs, rhs });
+            }
+            if (distances_.count({ rhs, lhs })) {
+                return distances_.at({ rhs, lhs });
+            }
+            return static_cast<int>(geo::ComputeDistance(lhs->coordinates, rhs->coordinates));
+        }
+
+        transport_catalog_serialize::Catalog TransportCatalogue::Serialize() const {
+            std::vector<const Stop*> sorted_stops = SortStops();
+            transport_catalog_serialize::BusList bus_list;
+            for (const Bus& bus : buses_data_) {
+                transport_catalog_serialize::Bus bus_to_out;
+                bus_to_out.set_name(bus.name);
+                bus_to_out.set_is_ring(bus.is_ring);
+                if (!bus.stops.empty()) {
+                    int stops_count = bus.is_ring ? bus.stops.size() : bus.stops.size() / 2 + 1;
+                    for (int i = 0; i < stops_count; ++i) {
+                        const Stop* stop = bus.stops[i];
+                        int pos = std::lower_bound(sorted_stops.begin(), sorted_stops.end(),
+                            stop, [](const Stop* lhs, const Stop* rhs) {
+                                return lhs->name < rhs->name; }) - sorted_stops.begin();
+                                bus_to_out.add_stop(pos);
+                    }
+                }
+                bus_list.add_bus();
+                *bus_list.mutable_bus(bus_list.bus_size() - 1) = bus_to_out;
+            }
+            transport_catalog_serialize::StopList stop_list;
+            for (const Stop& stop : stops_data_) {
+                transport_catalog_serialize::Stop stop_to_out;
+                stop_to_out.set_name(stop.name);
+                stop_to_out.set_latitude(stop.coordinates.lat);
+                stop_to_out.set_longitude(stop.coordinates.lng);
+                stop_list.add_stop();
+                *stop_list.mutable_stop(stop_list.stop_size() - 1) = stop_to_out;
+            }
+            transport_catalog_serialize::DistanceList distance_list;
+            for (const auto& [key, value] : distances_) {
+                transport_catalog_serialize::Distance distance_to_out;
+                int pos = std::lower_bound(sorted_stops.begin(), sorted_stops.end(),
+                    key.first, [](const Stop* lhs, const Stop* rhs) {
+                        return lhs->name < rhs->name; }) - sorted_stops.begin();
+                        distance_to_out.set_index_from(pos);
+                        pos = std::lower_bound(sorted_stops.begin(), sorted_stops.end(),
+                            key.second, [](const Stop* lhs, const Stop* rhs) {
+                                return lhs->name < rhs->name; }) - sorted_stops.begin();
+                                distance_to_out.set_index_to(pos);
+                                distance_to_out.set_distance(value);
+                                distance_list.add_distance();
+                                *distance_list.mutable_distance(distance_list.distance_size() - 1) = distance_to_out;
+            }
+            transport_catalog_serialize::Catalog catalog;
+            *catalog.mutable_bus_list() = bus_list;
+            *catalog.mutable_stop_list() = stop_list;
+            *catalog.mutable_distance_list() = distance_list;
+            return catalog;
+        }
+
+        bool TransportCatalogue::Deserialize(transport_catalog_serialize::Catalog& catalog) {
+            transport_catalog_serialize::StopList stop_list = catalog.stop_list();
+            for (int i = 0; i < stop_list.stop_size(); ++i) {
+                const transport_catalog_serialize::Stop& stop = stop_list.stop(i);
+                AddStop(stop.name(), { stop.latitude(), stop.longitude() });
+            }
+
+            std::vector<const Stop*> sorted_stops = SortStops();
+            transport_catalog_serialize::DistanceList distance_list = catalog.distance_list();
+            for (int i = 0; i < distance_list.distance_size(); ++i) {
+                const transport_catalog_serialize::Distance distance = distance_list.distance(i);
+                distances_[{sorted_stops[distance.index_from()], sorted_stops[distance.index_to()]}] = distance.distance();
+            }
+            transport_catalog_serialize::BusList bus_list = catalog.bus_list();
+            for (int i = 0; i < bus_list.bus_size(); ++i) {
+                const transport_catalog_serialize::Bus& bus_from_input = bus_list.bus(i);
+                std::vector<std::string_view> stops_in_bus;
+                stops_in_bus.reserve(bus_from_input.stop_size());
+                for (int i = 0; i < bus_from_input.stop_size(); ++i) {
+                    stops_in_bus.push_back(sorted_stops[bus_from_input.stop(i)]->name);
+                }
+                AddBus(bus_from_input.name(), stops_in_bus, bus_from_input.is_ring());
+            }
+            return true;
+        }
+
+        std::vector<std::string_view> TransportCatalogue::GetSortedStopsNames() const {
+            std::vector<std::string_view> result;
+            result.reserve(stops_data_.size());
+            for (const Stop& stop : stops_data_) {
+                result.emplace_back(stop.name);
+            }
+            std::sort(result.begin(), result.end());
+            return result;
+        }
+
         Stop* TransportCatalogue::FindStop(std::string_view name) const {
             if (!stops_container_.count(name)) {
                 return nullptr;
@@ -99,17 +191,8 @@ namespace tr_cat {
             return buses_container_.at(name);
         }
 
-        int TransportCatalogue::GetDistance(const Stop* lhs, const Stop* rhs) const {
-            if (distances_.count({ lhs, rhs })) {
-                return distances_.at({ lhs, rhs });
-            }
-            if (distances_.count({ rhs, lhs })) {
-                return distances_.at({ rhs, lhs });
-            }
-            return static_cast<int>(geo::ComputeDistance(lhs->coordinates, rhs->coordinates));
-        }
-
         int TransportCatalogue::ComputeRouteDistance(std::string_view name) const {
+
             const Bus* bus = FindBus(name);
             int distance = 0;
             const std::vector<Stop*>& stops = bus->stops;
@@ -130,5 +213,16 @@ namespace tr_cat {
             }
             return distance;
         }
-    }           // namespace aggregations
-}               // namespace tr_cat
+
+        std::vector<const Stop*> TransportCatalogue::SortStops() const {
+            std::vector<const Stop*>sorted_stops;
+            sorted_stops.reserve(stops_data_.size());
+            for (const Stop& stop : stops_data_) {
+                sorted_stops.push_back(&stop);
+            }
+            std::sort(sorted_stops.begin(), sorted_stops.end(),
+                [](const Stop* lhs, const Stop* rhs) {return lhs->name < rhs->name; });
+            return sorted_stops;
+        }
+    }       // namespace aggregations
+}           // namespace tr_cat
